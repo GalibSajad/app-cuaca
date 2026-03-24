@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Aplikasi cuaca modern dengan informasi cuaca real-time, prakiraan per jam & 5 hari, kualitas udara, dan lainnya.">
+    <title>WeatherScope — Cuaca Real-Time</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loader">
+            <div class="loader-circle"></div>
+            <p class="loader-text">Memuat data cuaca...</p>
+        </div>
+    </div>
+
+    <!-- Background Particles -->
+    <div id="particles" class="particles"></div>
+
+    <!-- Header -->
+    <header id="app-header" class="app-header">
+        <div class="header-content">
+            <div class="logo">
+                <svg class="logo-icon" viewBox="0 0 40 40" fill="none">
+                    <circle cx="20" cy="20" r="18" stroke="url(#logoGrad)" stroke-width="2.5" fill="none"/>
+                    <circle cx="20" cy="20" r="8" fill="url(#logoGrad)"/>
+                    <line x1="20" y1="2" x2="20" y2="8" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="20" y1="32" x2="20" y2="38" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="2" y1="20" x2="8" y2="20" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="32" y1="20" x2="38" y2="20" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="7.3" y1="7.3" x2="11.5" y2="11.5" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="28.5" y1="28.5" x2="32.7" y2="32.7" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="7.3" y1="32.7" x2="11.5" y2="28.5" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="28.5" y1="11.5" x2="32.7" y2="7.3" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40">
+                            <stop offset="0%" stop-color="#fbbf24"/>
+                            <stop offset="100%" stop-color="#f97316"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span class="logo-text">WeatherScope</span>
+            </div>
+            <div class="search-container" id="search-container">
+                <div class="search-input-wrapper">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="text" id="city-search" class="search-input" placeholder="Cari kota..." autocomplete="off">
+                    <button id="clear-search" class="clear-search-btn hidden" aria-label="Clear search">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+                <ul id="search-suggestions" class="search-suggestions hidden"></ul>
+            </div>
+            <div class="header-actions">
+                <button id="location-btn" class="icon-btn" title="Gunakan lokasi saya" aria-label="Use my location">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
+                        <circle cx="12" cy="12" r="8" stroke-dasharray="4 4"/>
+                    </svg>
+                </button>
+                <button id="unit-toggle" class="unit-toggle" title="Toggle unit" aria-label="Toggle temperature unit">
+                    <span class="unit-c active">°C</span>
+                    <span class="unit-sep">/</span>
+                    <span class="unit-f">°F</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Current Weather Hero -->
+        <section id="current-weather" class="hero-section reveal">
+            <div class="hero-left">
+                <div class="location-info">
+                    <svg class="pin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    <h1 id="city-name" class="city-name">—</h1>
+                    <span id="country-name" class="country-name"></span>
+                </div>
+                <p id="current-date" class="current-date"></p>
+                <div class="temp-display">
+                    <span id="current-temp" class="current-temp">--</span>
+                    <span id="temp-unit" class="temp-unit">°C</span>
+                </div>
+                <p id="weather-desc" class="weather-desc">—</p>
+                <div class="temp-range">
+                    <span class="temp-hi">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+                        <span id="temp-max">--°</span>
+                    </span>
+                    <span class="temp-lo">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                        <span id="temp-min">--°</span>
+                    </span>
+                </div>
+            </div>
+            <div class="hero-right">
+                <div id="weather-icon-container" class="weather-icon-container">
+                    <div id="weather-icon-animated" class="weather-icon-animated"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Stats -->
+        <section class="quick-stats reveal">
+            <div class="stat-card" id="stat-feels">
+                <div class="stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 14.76V3.5a2.5 2.5 0 00-5 0v11.26a4.5 4.5 0 105 0z"/>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Terasa</span>
+                    <span id="feels-like" class="stat-value">--°</span>
+                </div>
+            </div>
+            <div class="stat-card" id="stat-humidity">
+                <div class="stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Kelembaban</span>
+                    <span id="humidity" class="stat-value">--%</span>
+                </div>
+            </div>
+            <div class="stat-card" id="stat-wind">
+                <div class="stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9.59 4.59A2 2 0 1111 8H2m10.59 11.41A2 2 0 1014 16H2m15.73-8.27A2.5 2.5 0 1119.5 12H2"/>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Angin</span>
+                    <span id="wind-speed" class="stat-value">-- m/s</span>
+                </div>
+            </div>
+            <div class="stat-card" id="stat-pressure">
+                <div class="stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Tekanan</span>
+                    <span id="pressure" class="stat-value">-- hPa</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hourly Forecast -->
+        <section class="section-card reveal" id="hourly-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Prakiraan Per Jam
+                </h2>
+            </div>
+            <div class="hourly-scroll-wrapper">
+                <button id="hourly-left" class="scroll-btn scroll-left" aria-label="Scroll left">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <div id="hourly-container" class="hourly-container"></div>
+                <button id="hourly-right" class="scroll-btn scroll-right" aria-label="Scroll right">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 6 15 12 9 18"/></svg>
+                </button>
+            </div>
+            <!-- Hourly Temp Chart -->
+            <div class="chart-wrapper">
+                <canvas id="hourly-chart"></canvas>
+            </div>
+        </section>
+
+        <!-- 5-Day Forecast -->
+        <section class="section-card reveal" id="daily-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    Prakiraan 5 Hari
+                </h2>
+            </div>
+            <div id="daily-container" class="daily-container"></div>
+        </section>
+
+        <!-- Weather Details Grid -->
+        <section class="details-grid reveal">
+            <!-- UV Index -->
+            <div class="detail-card" id="detail-uv">
+                <div class="detail-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    <span>Indeks UV</span>
+                </div>
+                <div class="detail-value" id="uv-value">--</div>
+                <div class="detail-desc" id="uv-desc">—</div>
+                <div class="uv-bar-container">
+                    <div class="uv-bar">
+                        <div id="uv-indicator" class="uv-indicator" style="left: 0%"></div>
+                    </div>
+                    <div class="uv-labels"><span>0</span><span>3</span><span>6</span><span>8</span><span>11+</span></div>
+                </div>
+            </div>
+
+            <!-- Sunrise / Sunset -->
+            <div class="detail-card" id="detail-sun">
+                <div class="detail-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 18a5 5 0 00-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="8 6 12 2 16 6"/></svg>
+                    <span>Matahari</span>
+                </div>
+                <div class="sun-times">
+                    <div class="sun-time">
+                        <span class="sun-label">Terbit</span>
+                        <span id="sunrise" class="sun-value">--:--</span>
+                    </div>
+                    <div class="sun-arc-container">
+                        <svg id="sun-arc" class="sun-arc" viewBox="0 0 200 100">
+                            <path d="M10 90 Q100 -10 190 90" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="4 4"/>
+                            <circle id="sun-dot" cx="10" cy="90" r="6" fill="#fbbf24"/>
+                        </svg>
+                    </div>
+                    <div class="sun-time">
+                        <span class="sun-label">Terbenam</span>
+                        <span id="sunset" class="sun-value">--:--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visibility -->
+            <div class="detail-card" id="detail-visibility">
+                <div class="detail-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <span>Visibilitas</span>
+                </div>
+                <div class="detail-value" id="visibility-value">-- km</div>
+                <div class="detail-desc" id="visibility-desc">—</div>
+            </div>
+
+            <!-- Dew Point -->
+            <div class="detail-card" id="detail-dew">
+                <div class="detail-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
+                    <span>Titik Embun</span>
+                </div>
+                <div class="detail-value" id="dew-point">--°</div>
+                <div class="detail-desc" id="dew-desc">—</div>
+            </div>
+
+            <!-- Wind Detail -->
+            <div class="detail-card" id="detail-wind">
+                <div class="detail-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.59 4.59A2 2 0 1111 8H2m10.59 11.41A2 2 0 1014 16H2m15.73-8.27A2.5 2.5 0 1119.5 12H2"/></svg>
+                    <span>Detail Angin</span>
+                </div>
+                <div class="wind-compass">
+                    <div class="compass-ring">
+                        <span class="compass-dir n">U</span>
+                        <span class="compass-dir e">T</span>
+                        <span class="compass-dir s">S</span>
+                        <span class="compass-dir w">B</span>
+                        <div id="compass-needle" class="compass-needle" style="transform: rotate(0deg)">
+                            <div class="needle-tip"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="wind-info">
+                    <span id="wind-detail-speed" class="stat-value">-- m/s</span>
+                    <span id="wind-direction-text" class="detail-desc">—</span>
+                </div>
+            </div>
+
+            <!-- Clouds -->
+            <div class="detail-card" id="detail-clouds">
+                <div class="detail-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg>
+                    <span>Awan</span>
+                </div>
+                <div class="detail-value" id="clouds-value">--%</div>
+                <div class="cloud-bar-container">
+                    <div class="cloud-bar">
+                        <div id="cloud-fill" class="cloud-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="detail-desc" id="clouds-desc">—</div>
+            </div>
+        </section>
+
+        <!-- Air Quality -->
+        <section class="section-card reveal" id="aqi-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2h8l4 10H4L8 2z"/><path d="M12 12v6"/><path d="M8 22h8"/><path d="M7 12l-3 6"/><path d="M17 12l3 6"/></svg>
+                    Kualitas Udara
+                </h2>
+            </div>
+            <div class="aqi-content">
+                <div class="aqi-meter">
+                    <div class="aqi-circle">
+                        <svg class="aqi-ring" viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8"/>
+                            <circle id="aqi-progress" cx="60" cy="60" r="54" fill="none" stroke="#22c55e" stroke-width="8" stroke-linecap="round" stroke-dasharray="339.29" stroke-dashoffset="339.29" transform="rotate(-90 60 60)"/>
+                        </svg>
+                        <div class="aqi-center">
+                            <span id="aqi-value" class="aqi-value">--</span>
+                            <span id="aqi-label" class="aqi-label">—</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="aqi-pollutants" id="aqi-pollutants">
+                    <!-- Filled by JS -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <p>Data dari <a href="https://openweathermap.org/" target="_blank" rel="noopener">OpenWeatherMap</a> · WeatherScope &copy; 2026</p>
+    </footer>
+
+    <!-- Error Toast -->
+    <div id="error-toast" class="error-toast hidden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="error-message"></span>
+        <button id="error-close" class="error-close" aria-label="Close">&times;</button>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
